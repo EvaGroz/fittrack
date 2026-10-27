@@ -1,0 +1,8 @@
+# Always use LF line endings (bidejki Docker and Kubernetes run on Linux)
+* text=auto eol=lf
+
+# Binary files: never modify
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary

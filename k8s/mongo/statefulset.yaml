@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo
+  namespace: fittrack
+  labels:
+    app: mongo
+spec:
+  serviceName: mongo
+  replicas: 1         # 1 kopija na bazata
+  selector:
+    matchLabels:
+      app: mongo    # na ovoj StatefulSet koi pods ke pripagaat (-tie so app:mongo)
+  template:     # sekoj pod sega ke bide kreiran so ovoj template
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:8
+          ports:
+            - name: mongo
+              containerPort: 27017
+          envFrom:                #gi zema site promenlivi od ConfigMap i secrets
+            - configMapRef:
+                name: mongo-config
+            - secretRef:
+                name: mongo-secret
+          volumeMounts:           # Дискот mongo-data се поврзува на /data/db, каде MongoDB пишува податоци
+            - name: mongo-data
+              mountPath: /data/db
+          resources:          # kolku resursi smee da troshi
+            requests:           # min requests
+              cpu: 100m
+              memory: 256Mi
+            limits:         # max
+              memory: 1Gi
+          readinessProbe:     # proverka za spremnost na ovoj pod se dodeka ne e spremen da primi baranja
+            exec:
+              command: ["mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:          # proverka za zivot na podot, ako ne e ziv ke bide restartiran
+            exec:
+              command: ["mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+  volumeClaimTemplates:          # за секој Pod, StatefulSet автоматски креира PVC (PersistentVolumeClaim), za koga ke se izbrishe pod-ot da ostanat informciite na disk i da ne se izgubat
+    - metadata:
+        name: mongo-data
+      spec:
+        accessModes: ["ReadWriteOnce"]    # дискот може да го користи само еден node одеднаш
+        resources:
+          requests:
+            storage: 1Gi

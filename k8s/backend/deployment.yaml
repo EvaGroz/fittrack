@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: fittrack
+  labels:
+    app: backend
+spec:
+  replicas: 2    # 2 копии од backend имиџот од Docker Hub, za ako 1 pod padne da moze na drugiot da gi prefrli baranjata
+  selector:
+    matchLabels:
+      app: backend
+  strategy:
+    type: RollingUpdate      # Како се поставува нова верзија: Pods се заменуваат еден по еден
+    rollingUpdate:
+      maxUnavailable: 0    # Никогаш не смее да има помалку од 2 спремни Pods. Прво се креира нов, па се брише стар
+      maxSurge: 1          # За време на ажурирање смее да има најмногу 1 Pod повеќе, т.е. 3
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: eva357/fittrack-backend:latest    # Имиџот од Docker Hub, што го направив со GitHub Actions
+          imagePullPolicy: Always             # Секогаш провери на Docker Hub дали има понова latest верзија
+          ports:
+            - name: http
+              containerPort: 5000
+          envFrom:
+            - configMapRef:
+                name: backend-config
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: JWT_SECRET
+            - name: MONGO_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: MONGO_INITDB_ROOT_USERNAME
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: MONGO_INITDB_ROOT_PASSWORD
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+          readinessProbe:             # Ако базата не е достапна, /api/health враќа 503, па Pod-от не прима барања.
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:          # дали процесот слуша на портата
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            failureThreshold: 3

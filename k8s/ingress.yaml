@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fittrack
+  namespace: fittrack
+  labels:
+    app.kubernetes.io/part-of: fittrack
+spec:
+  ingressClassName: traefik
+  rules:
+    - http:
+        paths:
+          - path: /api        # Секое барање што почнува со /api и билокој prefix оди до Service-от backend на порта 5000
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 5000
+          - path: /          # Сè друго оди на frontend-от
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

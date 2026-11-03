@@ -216,3 +216,43 @@ Most images use the first frame (`0.jpg`) of the source exercise. "Closest match
 | Rowing Machine | Rowing_Stationary / 0 |
 
 </details>
+
+
+## Deployment
+
+### Docker Compose
+
+```bash
+cp .env.example .env          
+docker compose up -d --build
+```
+App: http://localhost:8080
+
+### CI/CD
+
+GitHub Actions (`.github/workflows/ci-cd.yml`) runs on every push to `main`:
+backend tests and frontend build, then builds and pushes
+`eva357/fittrack-backend` and `eva357/fittrack-frontend` to Docker Hub
+(tags `latest` and `sha-<commit>`). Images are published only if all tests pass.
+
+### Kubernetes (k3d)
+
+```bash
+k3d cluster create fittrack --agents 1 -p "8088:80@loadbalancer" --api-port 127.0.0.1:6550
+
+cp k8s/mongo/secret.yaml.example k8s/mongo/secret.yaml        
+cp k8s/backend/secret.yaml.example k8s/backend/secret.yaml   
+
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -R -f k8s/
+kubectl get all,ingress,pvc -n fittrack
+```
+App: http://localhost:8088
+
+| Resource | Purpose |
+|---|---|
+| `namespace.yaml` | `fittrack` namespace |
+| `mongo/` | MongoDB StatefulSet with PVC, headless Service, ConfigMap, Secret |
+| `backend/` | Express API Deployment (2 replicas), Service, ConfigMap, Secret |
+| `frontend/` | nginx Deployment (2 replicas), Service |
+| `ingress.yaml` | Traefik Ingress: `/api` → backend, `/` → frontend |

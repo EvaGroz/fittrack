@@ -6,10 +6,10 @@ metadata:
   labels:
     app: mongo
 spec:
-  clusterIP: None
+  clusterIP: None      # deka e headless service, za da sekoj pod ima svoja stabilna adresa so DNS iminja, namesto sekoj da ima razlicen IP
   selector:
     app: mongo
   ports:
     - name: mongo
-      port: 27017
-      targetPort: 27017
+      port: 27017            # porta na servisot
+      targetPort: 27017      # Portata na kontejnerot kade ke slusha MongoDB

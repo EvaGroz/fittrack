@@ -6,10 +6,10 @@ metadata:
   labels:
     app: backend
 spec:
-  type: ClusterIP
+  type: ClusterIP    # Service со своја внатрешна IP адреса, достапен само внатре во кластерот. Однадвор ќе се влегува преку Ingress
   selector:
-    app: backend
+    app: backend    # ги наоѓа двата backend Pods и ги дели барањата меѓу нив (load balancing);
   ports:
     - name: http
       port: 5000
-      targetPort: http
+      targetPort: http    # Покажува на портата наречена http во Deployment-от.

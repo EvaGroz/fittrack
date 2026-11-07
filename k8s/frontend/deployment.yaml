@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: eva357/fittrack-frontend:latest
+          image: eva357/fittrack-frontend:sha-f7c90b5
           imagePullPolicy: Always
           ports:
             - name: http

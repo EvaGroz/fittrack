@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: eva357/fittrack-backend:latest    # Имиџот од Docker Hub, што го направив со GitHub Actions
+          image: eva357/fittrack-backend:sha-f7c90b5
           imagePullPolicy: Always             # Секогаш провери на Docker Hub дали има понова latest верзија
           ports:
             - name: http

@@ -256,3 +256,31 @@ App: http://localhost:8088
 | `backend/` | Express API Deployment (2 replicas), Service, ConfigMap, Secret |
 | `frontend/` | nginx Deployment (2 replicas), Service |
 | `ingress.yaml` | Traefik Ingress: `/api` → backend, `/` → frontend |
+
+### CD (Argo CD)
+
+Argo CD runs inside the cluster and watches the `k8s/` folder of this repo
+(see `argocd/application.yaml`).
+
+1. On every push to `main`, the pipeline tests the code and pushes new images
+   tagged `sha-<commit>` to Docker Hub.
+2. The `update-manifests` job sets these tags in `k8s/backend/deployment.yaml`
+   and `k8s/frontend/deployment.yaml` and commits the change
+   (`ci: deploy sha-<commit> [skip ci]`).
+3. Argo CD detects the change in git and syncs the cluster automatically
+   (auto-sync, prune, self-heal), which triggers a rolling update.
+
+Setup:
+
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd --server-side --force-conflicts \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl apply -f argocd/application.yaml
+
+# UI: https://localhost:8443 (user: admin)
+kubectl port-forward svc/argocd-server -n argocd 8443:443
+```
+
+Secrets (`k8s/**/secret.yaml`) are not stored in git and are applied manually
+before the first sync.

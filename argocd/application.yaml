@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fittrack
+  namespace: argocd   #samiot aplikacija Argo CD e vo namespace argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/EvaGroz/fittrack.git
+    targetRevision: main   #koja granka da ja sledi
+    path: k8s
+    directory:
+      recurse: true   #i podpapkite na papkata k8s da gi sledi
+  destination:
+    server: https://kubernetes.default.svc  # vo koj klaster da se implementira-istiot kade raboti i Argo CD
+    namespace: fittrack  #vo koj namespace 
+  syncPolicy:
+    automated:  #avtomatski sinhroniziraj koga ima promena na it
+      prune: true   # ako izbrisham manifest od git i Argo CD da go izbrishe resursot od klasterot
+      selfHeal: true  # ako nekoj racno smeni neshto vo klasterot, Argo CD da go vrati vo prvobitnata sostojba kako shto e na git

@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: eva357/fittrack-backend:sha-f7c90b5
+          image: eva357/fittrack-backend:sha-c1d420f
           imagePullPolicy: Always             # Секогаш провери на Docker Hub дали има понова latest верзија
           ports:
             - name: http
